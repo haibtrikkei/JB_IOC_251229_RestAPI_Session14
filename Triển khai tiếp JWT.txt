@@ -1,0 +1,57 @@
+Phần 1: Thực hiện xong register tài khoản cho người dùng
+
+Phần 2: Thực hiện xong login và trả về chuỗi jwt.
+
+Phần 3:
+	Người dùng sử dụng chuỗi jwt để gọi các phương thức của api
+	
+	1. Cài đặt 1 filter kế thừa OncePerRequestFilter
+		- Filter tự chạy theo mỗi request của người dùng khi call api
+		- Lấy được chuỗi jwt từ trường Authorization của header
+		
+		-> Chuyển qua cài đặt JWTProvider với phương thức để xác thực
+		chuỗi jwt này.
+	2. Cài đặt phương thức validateToken(String token) trong JWTProvider
+	
+	3. Cài đặt luôn phương thức getUsernameFromToken(String token)
+	
+	4. Vào JWTAuthFilter để xử lý tiếp
+		- Gọi phương thức loadUserByUsername() của UserDetailsService
+		- Tạo ra đối tượng Authentication từ CustomUserDetails này
+		  và gán vào SecurityContextHolder
+	5. Cấu hình SecurityFilterChain đầy đủ
+		- Tạo ra 1 đối tượng để ném ra lỗi
+			-> Cài lớp JWTAuthenticationEntryPoint
+		- Cấu hình SecurityFilterChain
+			+ Cần cấu hình AuthenticationProvider
+
+Cài đặt thêm 1 method trên api để trả về danh sách tài khoản
+
+
+Phần 4: Xử lý refresh token:
+	- Refresh token: Là một chuỗi bí mật gắn với mỗi tài khoản khi đăng nhập và được trả
+	về khi người dùng login vào hệ thống
+	- Chuỗi refresh token tồn tại đủ lâu để người dụng được cấp lại access token mà không
+	cần login lại.
+
+	1. Tạo ra chuỗi refresh token và trả về khi người dùng login
+		- Tạo ra 1 class ORM chứa thông tin tài khoản và chuỗi refresh token
+			public class RefreshToken {
+				@Id
+				@GeneratedValue(strategy = GenerationType.IDENTITY)
+				private Long id;
+				private String refreshToken;
+				private String username;
+				private Instant expired;
+				private Boolean revoked;
+			}
+		
+		- Cài đặt RefreshTokenRepository
+		- Cài đặt RefreshTokenService
+		- Xử lý tạo RefreshToken khi người dùng login
+		
+	2. Xử lý cấp lại access token khi token cũ hết hạn
+		- User truyền lên api refreshToken
+		- Kiểm tra refreshToken có tồn tại trong database hay không
+		- Kiểm tra thời gian hiệu lực của refreshToken còn hay không
+		- Cấp lại access token nếu refreshToken hợp lệ.
